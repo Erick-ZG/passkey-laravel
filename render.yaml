@@ -1,7 +1,7 @@
 services:
   - type: web
     name: laravel12-react
-    runtime: docker
+    runtime: php
     plan: starter
     dockerfilePath: ./Dockerfile
     envVars:
