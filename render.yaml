@@ -3,6 +3,11 @@ services:
     name: laravel12-react
     runtime: docker
     plan: starter
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      npm ci && npm run build
+    startCommand: |
+      php artisan migrate --force && php artisan serve --host 0.0.0.0 --port 10000
     envVars:
       - key: DB_CONNECTION
         value: mysql
