@@ -3,6 +3,7 @@ services:
     name: laravel12-react
     runtime: docker
     plan: starter
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_CONNECTION
         value: mysql
@@ -13,11 +14,11 @@ services:
       - key: DB_DATABASE
         value: db_erick_06171
       - key: DB_USERNAME
-        sync: false   # pegarás el valor en el dashboard de Render
+        sync: false
       - key: DB_PASSWORD
-        sync: false   # pegarás el valor en el dashboard de Render
+        sync: false
 
-      # Variables extra de Laravel
+      # Laravel
       - key: APP_ENV
         value: production
       - key: APP_DEBUG

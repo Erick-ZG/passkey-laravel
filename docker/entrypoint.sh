@@ -1,12 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
-# Cache de Laravel
+# Preparar Laravel (sin correr migraciones aquí)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan storage:link || true
 
-# Migraciones automáticas
-php artisan migrate --force || true
-
-exec supervisord -n
+# Render pone el puerto en $PORT
+echo "Starting supervisord on port $PORT..."
+exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf

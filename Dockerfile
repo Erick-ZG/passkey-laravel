@@ -1,45 +1,39 @@
-# --- Stage 1: build de assets (Vite) ---
-FROM node:20-alpine AS assets
-WORKDIR /app
-COPY package*.json ./
-# Si usas bun/pnpm, ajusta aquí
-RUN npm ci
-# Copiamos solo lo necesario para el build
-COPY vite.config.* ./
-COPY resources ./resources
-COPY public ./public
-RUN npm run build
+# Imagen base con PHP 8.2 + FPM + Composer
+FROM php:8.2-fpm
 
-# --- Stage 2: dependencias PHP (Composer) ---
-FROM composer:2 AS vendor
-WORKDIR /app
-COPY composer.json composer.lock ./
-# Copiamos todo para que Composer pueda resolver autoloads
+# Instalar dependencias del sistema necesarias para Laravel
+RUN apt-get update && apt-get install -y \
+    git curl libpng-dev libjpeg-dev libfreetype6-dev libzip-dev unzip zip supervisor \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
+
+# Instalar Node.js (para compilar React/Vite)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Configurar directorio de la app
+WORKDIR /var/www/html
+
+# Copiar archivos de Laravel
 COPY . .
-RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-# --- Stage 3: runtime (Nginx + PHP-FPM en una sola imagen) ---
-FROM webdevops/php-nginx:8.3-alpine
-ENV WEB_DOCUMENT_ROOT=/app/public
-WORKDIR /app
+# Instalar dependencias PHP y Node
+RUN composer install --no-dev --optimize-autoloader \
+    && npm ci && npm run build
 
-# Extensiones útiles (mysql)
-RUN docker-php-ext-install pdo pdo_mysql bcmath opcache
+# Configurar supervisor
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copiamos el código y artefactos
-COPY --from=vendor /app /app
-COPY --from=assets /app/public/build /app/public/build
+# Copiar entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Permisos
-RUN chown -R application:application /app/storage /app/bootstrap/cache \
- && chmod -R ug+rwX /app/storage /app/bootstrap/cache
+# Render asigna el puerto dinámico en $PORT
+ENV PORT=10000
+EXPOSE 10000
 
-# Opcional: forzar HTTPS en producción (ajústalo en AppServiceProvider si prefieres)
-# ENV APP_ENV=production
-
-# Entrypoint: cachea config/rutas/vistas y arranca supervisord (nginx + php-fpm)
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-USER application
-CMD ["/entrypoint.sh"]
+# Iniciar con entrypoint
+ENTRYPOINT ["entrypoint.sh"]
