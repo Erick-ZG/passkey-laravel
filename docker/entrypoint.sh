@@ -6,5 +6,5 @@ php artisan route:cache
 php artisan view:cache
 php artisan storage:link || true
 
-# No usamos artisan serve, dejamos que supervisord maneje nginx+php-fpm
-exec /usr/bin/supervisord -n -c /opt/docker/etc/supervisord.conf
+# No migramos aquí; eso se hace en el preDeploy de Render
+exec /usr/bin/supervisord -n -c /etc/supervisord.conf

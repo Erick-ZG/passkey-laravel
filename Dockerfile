@@ -5,13 +5,15 @@ FROM php:8.2-fpm
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libjpeg-dev libfreetype6-dev libzip-dev unzip zip supervisor \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar Node.js (para compilar React/Vite)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar Composer
+# Instalar Composer (desde imagen oficial)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Configurar directorio de la app
@@ -24,10 +26,10 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader \
     && npm ci && npm run build
 
-# Configurar supervisor
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Copiar supervisor config en la ruta correcta
+COPY docker/supervisord.conf /etc/supervisord.conf
 
-# Copiar entrypoint
+# Copiar entrypoint y darle permisos
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
