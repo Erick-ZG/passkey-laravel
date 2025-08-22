@@ -1,0 +1,57 @@
+# render.yaml
+databases:
+  - name: laravel_db
+    plan: free   # puedes subir de plan luego
+    # Render crea DATABASE_URL y otras props que podemos referenciar
+
+services:
+  - type: web
+    name: laravel12-react
+    runtime: docker
+    plan: starter
+    # Si tu Dockerfile no está en la raíz, usa dockerContext/dockerfilePath
+    # dockerContext: .
+    # dockerfilePath: ./Dockerfile
+
+    # Comandos del ciclo de deploy:
+    # (Render ejecuta esto dentro del contenedor de build/run)
+    preDeployCommand: php artisan migrate --force
+    # El start lo define el CMD del Dockerfile (entrypoint.sh). Si quieres, podrías:
+    # dockerCommand: /entrypoint.sh
+
+    envVars:
+      # Conecta Postgres administrado
+      - key: DATABASE_URL
+        fromDatabase:
+          name: laravel_db
+          property: connectionString
+      - key: DB_CONNECTION
+        value: pgsql
+
+      # Laravel
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false   # pon tu dominio .onrender.com o personalizado tras el primer deploy
+      - key: APP_KEY
+        sync: false   # pega aquí 'php artisan key:generate --show'
+
+      # Drivers sencillos por defecto
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+
+      # WorkOS (ajústalo a tu integración)
+      - key: WORKOS_API_KEY
+        sync: false
+      - key: WORKOS_CLIENT_ID
+        sync: false
+      - key: WORKOS_WEBHOOK_SECRET
+        sync: false
+      - key: WORKOS_REDIRECT_URI
+        sync: false   # ejemplo: https://TU-SERVICE.onrender.com/auth/callback
