@@ -1,12 +1,11 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
-# Cache de Laravel
+# En Render, las env vars viven fuera del .env y se leen cuando cacheas config
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan storage:link || true
 
-# Migraciones automáticas
-php artisan migrate --force || true
-
-exec supervisord -n
+# No migramos aquí; lo haremos en preDeploy del Blueprint
+exec /usr/bin/supervisord -n -c /opt/docker/etc/supervisord.conf
