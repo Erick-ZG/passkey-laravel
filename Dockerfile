@@ -1,44 +1,39 @@
-# --- Stage 1: Build assets (Vite/React) ---
-FROM node:20-alpine AS assets
-WORKDIR /app
+# --- Base PHP 8.2 FPM ---
+FROM php:8.2-fpm
 
-# Copiamos solo lo necesario para instalar dependencias
-COPY package*.json ./
-RUN npm ci
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    git curl libpng-dev libjpeg-dev libfreetype6-dev libzip-dev unzip zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql zip bcmath
 
-COPY vite.config.* ./
-COPY resources ./resources
-COPY public ./public
-RUN npm run build
+# Instalar Node.js (para Vite/React)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
-# --- Stage 2: Dependencias PHP (Composer) ---
-FROM composer:2 AS vendor
-WORKDIR /app
-COPY composer.json composer.lock ./
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Directorio de trabajo
+WORKDIR /var/www/html
+
+# Copiar archivos de Laravel
 COPY . .
-RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-# --- Stage 3: Runtime (PHP-FPM + Nginx) ---
-FROM webdevops/php-nginx:8.3-alpine
+# Instalar dependencias PHP y Node
+RUN composer install --no-dev --optimize-autoloader \
+    && npm ci && npm run build
 
-# Document root
-ENV WEB_DOCUMENT_ROOT=/app/public
-WORKDIR /app
+# Ajustar permisos para que Render no necesite root
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Extensiones necesarias
-RUN docker-php-ext-install pdo pdo_mysql bcmath opcache
+# Puerto dinámico asignado por Render
+ENV PORT=10000
+EXPOSE 10000
 
-# Copiamos el código y assets
-COPY --from=vendor /app /app
-COPY --from=assets /app/public/build /app/public/build
+# Entrypoint simplificado
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Permisos
-RUN chown -R application:application /app/storage /app/bootstrap/cache \
-    && chmod -R ug+rwX /app/storage /app/bootstrap/cache
-
-# Entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-USER application
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]

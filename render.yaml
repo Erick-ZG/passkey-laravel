@@ -1,9 +1,10 @@
 services:
   - type: web
     name: laravel12-react
-    runtime: docker
     plan: starter
+    runtime: docker
     dockerfilePath: ./Dockerfile
+    preDeployCommand: php artisan migrate --force
     envVars:
       - key: DB_CONNECTION
         value: mysql
@@ -24,12 +25,4 @@ services:
       - key: APP_KEY
         sync: false
       - key: APP_URL
-        sync: false
-      - key: WORKOS_API_KEY
-        sync: false
-      - key: WORKOS_CLIENT_ID
-        sync: false
-      - key: WORKOS_WEBHOOK_SECRET
-        sync: false
-      - key: WORKOS_REDIRECT_URI
         sync: false
