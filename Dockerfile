@@ -8,8 +8,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install gd pdo pdo_mysql zip bcmath
 
 # Instalar Node.js (para Vite/React)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && node -v && npm -v
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -35,5 +36,8 @@ EXPOSE 10000
 # Entrypoint simplificado
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+#bundle
+COPY storage/certs/singlestore_bundle.pem /var/www/html/storage/certs/singlestore_bundle.pem
 
 ENTRYPOINT ["entrypoint.sh"]
