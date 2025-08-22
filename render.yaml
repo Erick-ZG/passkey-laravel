@@ -3,7 +3,6 @@ services:
     name: laravel12-react
     runtime: docker
     plan: starter
-    preDeployCommand: php artisan migrate --force
     envVars:
       - key: DB_CONNECTION
         value: mysql
