@@ -33,4 +33,3 @@ services:
         sync: false
       - key: WORKOS_REDIRECT_URI
         sync: false
-    preDeployCommand: php artisan migrate --force
