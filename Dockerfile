@@ -23,8 +23,8 @@ FROM webdevops/php-nginx:8.3-alpine
 ENV WEB_DOCUMENT_ROOT=/app/public
 WORKDIR /app
 
-# Extensiones útiles (pgsql por defecto; si usas MySQL, cambia por pdo_mysql)
-RUN docker-php-ext-install pdo pdo_pgsql bcmath opcache
+# Extensiones útiles (mysql)
+RUN docker-php-ext-install pdo pdo_mysql bcmath opcache
 
 # Copiamos el código y artefactos
 COPY --from=vendor /app /app
