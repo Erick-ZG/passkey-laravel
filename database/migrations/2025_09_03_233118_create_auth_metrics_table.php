@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('auth_metrics', function (Blueprint $table) {
             $table->id();
             $table->string('kind')->nullable(); // passkey_setup, password_creation
-            $table->integer('duration_ms')->nullable(); // tiempo en milisegundos
+            $table->bigInteger('duration_ms')->nullable(); // para enteros grandes
             $table->boolean('success')->default(false);
             $table->string('error_code')->nullable(); // código de error (si hay)
             $table->text('error_message')->nullable(); // detalle del error

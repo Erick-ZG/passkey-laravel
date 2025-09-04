@@ -15,9 +15,8 @@ Route::get('login', function (AuthKitLoginRequest $request) {
 
 
 Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
-    $duration = session('auth_start_time')
-        ? now()->diffInMilliseconds(session('auth_start_time'))
-        : null;
+        $start = session('auth_start_time');
+        $duration = $start ? $start->diffInMilliseconds(now()) : null;
 
         DB::table('auth_metrics')->insert([
             'kind'        => session('auth_kind', 'unknown'),
