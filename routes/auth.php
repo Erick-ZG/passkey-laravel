@@ -15,17 +15,18 @@ Route::get('login', function (AuthKitLoginRequest $request) {
 
 
 Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
-        $start = session('auth_start_time');
-        $duration = $start ? $start->diffInMilliseconds(now()) : null;
+    $authMethod = $request->json('authentication.method') ?? 'unknown';
 
-        DB::table('auth_metrics')->insert([
-            'kind'        => session('auth_kind', 'unknown'),
-            'duration_ms' => $duration,
-            'success'     => true,
-            'user_id'     => $request->userId,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+    DB::table('auth_metrics')->insert([
+        'kind'        => $authMethod, // aquí ya vendría 'passkey' o 'password'
+        'duration_ms' => session('auth_start_time') 
+                          ? (microtime(true) - session('auth_start_time')) * 1000 
+                          : null,
+        'success'     => true,
+        'user_id'     => $request->userId,
+        'created_at'  => now(),
+        'updated_at'  => now(),
+    ]);
 
     return tap(to_route('dashboard'), fn () => $request->authenticate());
 });
