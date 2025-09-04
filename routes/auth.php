@@ -7,21 +7,31 @@ use Laravel\WorkOS\Http\Requests\AuthKitLogoutRequest;
 use Illuminate\Support\Facades\DB;
 
 Route::get('login', function (AuthKitLoginRequest $request) {
-    session(['auth_start_time' => now()]);
+    // Guardar tiempo inicial como float
+    session(['auth_start_time' => microtime(true)]);
+    
+    // Guardar el método (puedes pasar ?method=passkey_creation o ?method=password_creation)
     session(['auth_kind' => request('method', 'password_creation')]); 
-    // puedes pasar ?method=passkey_setup o ?method=password_creation
+
     return $request->redirect();
 })->middleware(['guest'])->name('login');
 
 
 Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
-    $authMethod = $request->json('authentication.method') ?? 'unknown';
+    // Calcular duración en ms
+    $duration = null;
+    if (session()->has('auth_start_time')) {
+        $duration = (microtime(true) - session('auth_start_time')) * 1000;
+        session()->forget('auth_start_time');
+    }
+
+    // Tomar el método de sesión o fallback
+    $authKind = session('auth_kind', 'unknown');
+    session()->forget('auth_kind');
 
     DB::table('auth_metrics')->insert([
-        'kind'        => $authMethod, // aquí ya vendría 'passkey' o 'password'
-        'duration_ms' => session('auth_start_time') 
-                          ? (microtime(true) - session('auth_start_time')) * 1000 
-                          : null,
+        'kind'        => $authKind, // ahora queda lo que guardaste en login
+        'duration_ms' => $duration,
         'success'     => true,
         'user_id'     => $request->userId,
         'created_at'  => now(),
@@ -30,7 +40,6 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
 
     return tap(to_route('dashboard'), fn () => $request->authenticate());
 });
-
 
 
 Route::post('logout', function (AuthKitLogoutRequest $request) {
