@@ -46,5 +46,17 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        {{-- Mensajes flash simples --}}
+        @if(session('success'))
+            <div class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow">
+                {{ session('error') }}
+            </div>
+        @endif
     </body>
 </html>

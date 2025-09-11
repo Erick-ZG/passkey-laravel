@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +25,9 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+        User::observe(UserObserver::class);
     }
+    protected $policies = [
+    \App\Models\Account::class => \App\Policies\AccountPolicy::class,
+    ];
 }

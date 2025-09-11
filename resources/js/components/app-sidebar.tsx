@@ -8,12 +8,10 @@ import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
+  { title: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+  { title: 'Cuentas', href: '/accounts', icon: Folder },
 ];
+
 
 const footerNavItems: NavItem[] = [
     {

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -41,9 +43,28 @@ Route::middleware([
     ValidateSessionWithWorkOS::class,
 ])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        /** @var User $user */
+        $user = Auth::user();
+        // cuentas del usuario
+        $accounts = $user->accounts()->get(['id','number','name','currency','balance']);
+
+        // total balance sumado
+        $total = $accounts->sum('balance');
+
+        // últimas 5 transacciones (de todas sus cuentas) - opcional
+        $txs = \App\Models\Transaction::whereIn('account_id', $accounts->pluck('id')->toArray())
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id','account_id','type','amount','counterparty','created_at']);
+
+        return Inertia::render('dashboard', [
+            'accounts' => $accounts,
+            'total_balance' => $total,
+            'recent_transactions' => $txs,
+        ]);
     })->name('dashboard');
 });
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+require __DIR__.'/banking.php';

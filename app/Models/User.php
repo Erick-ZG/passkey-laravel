@@ -46,4 +46,21 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
+
+    /** (opcionales) atajos útiles */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function transactions()
+    {
+        // Todas las transacciones a través de sus cuentas
+        return $this->hasManyThrough(Transaction::class, Account::class);
+    }
 }
