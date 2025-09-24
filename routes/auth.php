@@ -24,12 +24,14 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
         session()->forget('auth_start_time');
     }
 
-    // Obtenemos el método real de WorkOS
-    $authPayload = $request->toArray(); // convierte la request en array
-    $authMethod = $authPayload['authentication']['method'] ?? 'unknown';
+    $authPayload = $request->toArray();
+    $authMethod  = $authPayload['authentication']['method'] ?? 'unknown';
+
+    // **Primero** crea la sesión del usuario
+    $request->authenticate();
 
     DB::table('auth_metrics')->insert([
-        'kind'        => $authMethod, // ← aquí ya debería ir "passkey" o "password"
+        'kind'        => $authMethod,
         'duration_ms' => $duration,
         'success'     => true,
         'user_id'     => $request->userId,
@@ -37,7 +39,7 @@ Route::get('/authenticate', function (AuthKitAuthenticationRequest $request) {
         'updated_at'  => now(),
     ]);
 
-    return tap(to_route('dashboard'), fn () => $request->authenticate());
+    return redirect()->route('dashboard');
 });
 
 
