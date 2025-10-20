@@ -32,7 +32,7 @@ export default function AccountCreate({ currencies = [] as Currency[] }) {
               value={data.name}
               onChange={(e) => setData('name', e.target.value)}
               className="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-800 dark:text-white"
-              placeholder="Ej: Cuenta principal, Ahorros o viaje"
+              placeholder="Ej: Cuenta principal, Ahorros, Viaje"
             />
             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name as string}</p>}
           </div>
